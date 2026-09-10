@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Petualangan Kata: Penjelajah Bahasa Indonesia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Poppins & Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Nunito', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        h1, h2, h3, .font-heading {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Custom Animated Background Gradient */
+        .bg-adventure {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        /* Game Card Glassmorphism */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* Glowing Effects */
+        .glow-gold {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+        }
+        .glow-blue {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+        }
+
+        /* Draggable Card Animations */
+        .draggable-card {
+            touch-action: none;
+            cursor: grab;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .draggable-card:active {
+            cursor: grabbing;
+        }
+
+        /* Dropzones Highlight */
+        .dropzone-active {
+            transform: scale(1.03);
+            border-color: #f59e0b !important;
+            background-color: rgba(245, 158, 11, 0.15) !important;
+        }
+
+        /* Float Animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Pulse Ring */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-effect {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+
+        /* Map Line Connector */
+        .map-line {
+            background: linear-gradient(90deg, #3b82f6, #f59e0b);
+        }
+
+        /* Confetti Canvas Overlay */
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+    </style>
+</head>
+<body class="bg-adventure min-h-screen text-slate-100 flex flex-col justify-between overflow-x-hidden">
+
+    <!-- Sound Effect Canvas Overlay -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- Header Navigation & Status -->
+    <header class="w-full max-w-4xl mx-auto px-4 pt-4 pb-2">
+        <div class="glass-panel rounded-2xl p-4 flex flex-wrap justify-between items-center shadow-2xl border-b border-amber-500/30">
+            <!-- Game Brand / Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-900 font-extrabold text-xl shadow-lg">
+                    <i class="fa-solid fa-compass"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-bold bg-gradient-to-r from-amber-300 via-yellow-200 to-emerald-300 bg-clip-text text-transparent">
+                        Nusantara Kata
+                    </h1>
+                    <p class="text-xs text-slate-400">Petualangan Kata Baku SMP</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar (Score & Sound Toggle) -->
+            <div class="flex items-center gap-4 mt-2 sm:mt-0">
+                <!-- Sound Toggle -->
+                <button id="sound-btn" onclick="toggleSound()" class="w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition-all border border-slate-700">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+                </button>
+
+                <!-- Current Score Badge -->
+                <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-amber-500/40">
+                    <i class="fa-solid fa-trophy text-amber-400 text-sm"></i>
+                    <span class="text-xs text-slate-400 font-semibold">Skor:</span>
+                    <span id="score-display" class="text-base font-bold text-amber-300">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Interactive Arena Container -->
+    <main class="w-full max-w-4xl mx-auto px-4 my-auto flex-1 flex flex-col justify-center py-4">
+        
+        <!-- Peta Perjalanan Pos (Visual Map Progress) -->
+        <div class="glass-panel rounded-2xl p-4 mb-6 relative overflow-hidden">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-map-location-dot text-emerald-400"></i> Peta Perjalanan Bahasa
+            </div>
+
+            <!-- Map Progress Nodes -->
+            <div class="relative flex justify-between items-center px-4 md:px-8 py-2">
+                <!-- Connector Line -->
+                <div class="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-1.5 bg-slate-700 rounded-full -z-0"></div>
+                <div id="progress-line" class="absolute left-8 top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full transition-all duration-500 -z-0" style="width: 0%;"></div>
+
+                <!-- 5 Location Nodes -->
+                <div id="node-0" class="location-node relative z-10 flex flex-col items-center">
+                    <div class="node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-sm md:text-base text-slate-400 transition-all shadow-md">
+                        <i class="fa-solid fa-tree"></i>
+                    </div>
+                    <span class="text-[10px] md:text-xs mt-1.5 font-semibold text-slate-400 hidden sm:block">Hutan Ejaan</span>
+                </div>
+
+                <div id="node-1" class="location-node relative z-10 flex flex-col items-center">
+                    <div class="node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-sm md:text-base text-slate-400 transition-all shadow-md">
+                        <i class="fa-solid fa-water"></i>
+                    </div>
+                    <span class="text-[10px] md:text-xs mt-1.5 font-semibold text-slate-400 hidden sm:block">Sungai EYD</span>
+                </div>
+
+                <div id="node-2" class="location-node relative z-10 flex flex-col items-center">
+                    <div class="node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-sm md:text-base text-slate-400 transition-all shadow-md">
+                        <i class="fa-solid fa-mountain"></i>
+                    </div>
+                    <span class="text-[10px] md:text-xs mt-1.5 font-semibold text-slate-400 hidden sm:block">Gua Kamus</span>
+                </div>
+
+                <div id="node-3" class="location-node relative z-10 flex flex-col items-center">
+                    <div class="node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-sm md:text-base text-slate-400 transition-all shadow-md">
+                        <i class="fa-solid fa-archway"></i>
+                    </div>
+                    <span class="text-[10px] md:text-xs mt-1.5 font-semibold text-slate-400 hidden sm:block">Lembah Tatabahasa</span>
+                </div>
+
+                <div id="node-4" class="location-node relative z-10 flex flex-col items-center">
+                    <div class="node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center text-sm md:text-base text-slate-400 transition-all shadow-md">
+                        <i class="fa-solid fa-crown"></i>
+                    </div>
+                    <span class="text-[10px] md:text-xs mt-1.5 font-semibold text-slate-400 hidden sm:block">Istana KBBI</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Adventure Game Scene -->
+        <div id="game-arena" class="glass-panel rounded-3xl p-6 relative flex flex-col items-center justify-between min-h-[380px] shadow-2xl border border-slate-700/60">
+            
+            <!-- Current Location Banner -->
+            <div class="w-full flex justify-between items-center mb-4 pb-3 border-b border-slate-700/50">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-md bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
+                        POS <span id="current-pos-num">1</span>/5
+                    </span>
+                    <h2 id="location-title" class="text-sm md:text-base font-bold text-slate-200">
+                        Hutan Ejaan
+                    </h2>
+                </div>
+                <div class="text-xs text-slate-400 flex items-center gap-1">
+                    <i class="fa-solid fa-hand-pointer text-amber-400 animate-bounce"></i>
+                    <span>Tarik kata ke kotak yang tepat</span>
+                </div>
+            </div>
+
+            <!-- Draggable Word Artifact Area -->
+            <div class="my-auto py-6 flex flex-col items-center relative w-full">
+                <!-- Floating Light Effect behind word -->
+                <div class="absolute w-40 h-40 bg-amber-500/10 rounded-full blur-2xl -z-10 animate-pulse"></div>
+
+                <!-- DRAGGABLE WORD ITEM -->
+                <div id="word-card" class="draggable-card bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-500 text-slate-950 font-extrabold text-2xl md:text-3xl px-8 py-4 rounded-2xl shadow-xl border-2 border-amber-200 flex items-center gap-3 active:scale-105 select-none relative z-20">
+                    <i class="fa-solid fa-scroll text-slate-900/60 text-xl"></i>
+                    <span id="word-text">Apotik</span>
+                </div>
+                <p class="text-xs text-slate-400 mt-3 font-medium">Geser kata ini ke bawah 👇</p>
+            </div>
+
+            <!-- DROP ZONES (BAKU & TIDAK BAKU) -->
+            <div class="grid grid-cols-2 gap-4 w-full mt-4">
+                
+                <!-- Dropzone 1: KATA BAKU -->
+                <div id="zone-baku" data-type="baku" class="dropzone border-2 border-dashed border-emerald-500/50 bg-emerald-950/20 hover:bg-emerald-900/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-200 min-h-[110px]">
+                    <div class="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-1 text-base">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="font-extrabold text-sm md:text-base text-emerald-300">KATA BAKU</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Sesuai aturan KBBI & EYD</p>
+                </div>
+
+                <!-- Dropzone 2: KATA TIDAK BAKU -->
+                <div id="zone-tidak-baku" data-type="tidak-baku" class="dropzone border-2 border-dashed border-rose-500/50 bg-rose-950/20 hover:bg-rose-900/30 rounded-2xl p-4 flex flex-col items-center justify-center text-center transition-all duration-200 min-h-[110px]">
+                    <div class="w-9 h-9 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mb-1 text-base">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </div>
+                    <h3 class="font-extrabold text-sm md:text-base text-rose-300">KATA TIDAK BAKU</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Bahasa cakapan / Sehari-hari</p>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Educational Popup Feedback Modal -->
+    <div id="feedback-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-50 hidden transition-all duration-300">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 max-w-md w-full text-center shadow-2xl border border-slate-700 relative animate-float">
+            
+            <!-- Result Icon Badge -->
+            <div id="feedback-badge" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl border-4">
+                <i id="feedback-icon" class="fa-solid fa-check"></i>
+            </div>
+
+            <h2 id="feedback-title" class="text-2xl font-black mb-2">Jawaban Tepat!</h2>
+            <p id="feedback-subtitle" class="text-slate-300 font-bold text-lg mb-4">"Apotik" adalah Kata Tidak Baku</p>
+
+            <!-- KBBI Educational Note Box -->
+            <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 text-left mb-6">
+                <div class="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider mb-1.5">
+                    <i class="fa-solid fa-book-bookmark"></i> Catatan KBBI & EYD:
+                </div>
+                <p id="feedback-explanation" class="text-sm text-slate-300 leading-relaxed">
+                    Bentuk baku yang benar menurut Kamus Besar Bahasa Indonesia adalah <strong>Apotek</strong> (menggunakan huruf 'e').
+                </p>
+            </div>
+
+            <!-- Continue Button -->
+            <button onclick="nextStage()" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-base shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                <span>Lanjutkan Perjalanan</span>
+                <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Final Game Over / Evaluation Modal -->
+    <div id="victory-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-lg flex items-center justify-center p-4 z-50 hidden">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 max-w-lg w-full text-center shadow-2xl border border-amber-500/30 max-h-[90vh] overflow-y-auto">
+            
+            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 text-slate-950 flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl glow-gold">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <h2 class="text-2xl md:text-3xl font-black text-amber-300 mb-1">Petualangan Selesai!</h2>
+            <p class="text-sm text-slate-400 mb-4">Kamu telah menjelajahi seluruh pos kata di Nusantara Bahasa.</p>
+
+            <!-- Final Score Display -->
+            <div class="bg-slate-900/80 rounded-2xl p-4 border border-slate-800 mb-6 flex justify-around items-center">
+                <div>
+                    <span class="text-xs text-slate-400 block font-semibold">Skor Akhir</span>
+                    <span id="final-score" class="text-3xl font-black text-amber-400">100</span>
+                </div>
+                <div class="h-10 w-[1px] bg-slate-800"></div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-semibold">Gelar Penjelajah</span>
+                    <span id="final-rank" class="text-base font-extrabold text-emerald-400">Pakar Bahasa SMP</span>
+                </div>
+            </div>
+
+            <!-- Review Table of Questions -->
+            <div class="text-left mb-6">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-amber-400"></i> Ringkasan Evaluasi Kata:
+                </h3>
+                <div id="review-list" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    <!-- Inserted dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Restart Button -->
+            <button onclick="restartGame()" class="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-base shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i>
+                <span>Mainkan Lagi</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-3 text-xs text-slate-500">
+        Nusantara Kata • Media Pembelajaran Bahasa Indonesia SMP (KBBI & EYD V)
+    </footer>
+
+    <script>
+        // Game Dataset: Kata Baku & Tidak Baku SMP
+        const stageData = [
+            {
+                location: "Hutan Ejaan",
+                icon: "fa-tree",
+                word: "Apotik",
+                type: "tidak-baku",
+                correctForm: "Apotek",
+                explanation: "Bentuk baku yang benar menurut KBBI adalah 'Apotek' (menggunakan huruf 'e'). Turunan katanya adalah 'apoteker'."
+            },
+            {
+                location: "Sungai EYD",
+                icon: "fa-water",
+                word: "Aktivitas",
+                type: "baku",
+                correctForm: "Aktivitas",
+                explanation: "Kata 'Aktivitas' adalah bentuk baku (menggunakan huruf 'v'). Penyerapan dari bahasa asing 'activity'."
+            },
+            {
+                location: "Gua Kamus",
+                icon: "fa-mountain",
+                word: "Nasehat",
+                type: "tidak-baku",
+                correctForm: "Nasihat",
+                explanation: "Bentuk baku yang benar adalah 'Nasihat' (menggunakan huruf 'i'), diserap dari bahasa Arab 'naṣīḥah'."
+            },
+            {
+                location: "Lembah Tatabahasa",
+                icon: "fa-archway",
+                word: "Jadual",
+                type: "tidak-baku",
+                correctForm: "Jadwal",
+                explanation: "Sesuai kaidah KBBI, bentuk baku yang tepat adalah 'Jadwal' (menggunakan huruf 'w')."
+            },
+            {
+                location: "Istana KBBI",
+                icon: "fa-crown",
+                word: "Kuitansi",
+                type: "baku",
+                correctForm: "Kuitansi",
+                explanation: "'Kuitansi' adalah kata baku yang sah dalam bahasa Indonesia (menggunakan 'ui', bukan 'w')."
+            }
+        ];
+
+        // Game State Variables
+        let currentStage = 0;
+        let score = 0;
+        let soundEnabled = true;
+        let userAnswers = [];
+
+        // DOM Elements
+        const wordCard = document.getElementById('word-card');
+        const wordText = document.getElementById('word-text');
+        const scoreDisplay = document.getElementById('score-display');
+        const currentPosNum = document.getElementById('current-pos-num');
+        const locationTitle = document.getElementById('location-title');
+        const progressLine = document.getElementById('progress-line');
+        const feedbackModal = document.getElementById('feedback-modal');
+        const victoryModal = document.getElementById('victory-modal');
+        const zoneBaku = document.getElementById('zone-baku');
+        const zoneTidakBaku = document.getElementById('zone-tidak-baku');
+
+        // Web Audio API Synthesizer (No external MP3 dependencies)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    // Ascending Chime
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                    osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    // Low Buzzer
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.setValueAtTime(174.61, now + 0.15); // F3
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'pop') {
+                    // Drag Pop
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                }
+            } catch (e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (soundEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-rose-400';
+            }
+        }
+
+        // Drag and Touch Interaction Logic using Pointer Events
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        function initPointerEvents() {
+            wordCard.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('pointerup', onPointerUp);
+        }
+
+        function onPointerDown(e) {
+            isDragging = true;
+            wordCard.setPointerCapture(e.pointerId);
+            
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            playSound('pop');
+            wordCard.style.transition = 'none';
+            wordCard.style.zIndex = '100';
+        }
+
+        function onPointerMove(e) {
+            if (!isDragging) return;
+
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            wordCard.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${deltaX * 0.03}deg)`;
+
+            // Check overlap with dropzones
+            const cardRect = wordCard.getBoundingClientRect();
+            checkHoverDropzone(cardRect, zoneBaku);
+            checkHoverDropzone(cardRect, zoneTidakBaku);
+        }
+
+        function checkHoverDropzone(cardRect, zone) {
+            const zoneRect = zone.getBoundingClientRect();
+            const isOver = !(cardRect.right < zoneRect.left || 
+                             cardRect.left > zoneRect.right || 
+                             cardRect.bottom < zoneRect.top || 
+                             cardRect.top > zoneRect.bottom);
+
+            if (isOver) {
+                zone.classList.add('dropzone-active');
+            } else {
+                zone.classList.remove('dropzone-active');
+            }
+            return isOver;
+        }
+
+        function onPointerUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+
+            const cardRect = wordCard.getBoundingClientRect();
+            const droppedOnBaku = checkHoverDropzone(cardRect, zoneBaku);
+            const droppedOnTidakBaku = checkHoverDropzone(cardRect, zoneTidakBaku);
+
+            zoneBaku.classList.remove('dropzone-active');
+            zoneTidakBaku.classList.remove('dropzone-active');
+
+            if (droppedOnBaku) {
+                evaluateAnswer('baku');
+            } else if (droppedOnTidakBaku) {
+                evaluateAnswer('tidak-baku');
+            } else {
+                // Snap back to center
+                wordCard.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                wordCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+            }
+        }
+
+        function loadCurrentStage() {
+            if (currentStage >= stageData.length) {
+                showVictoryScreen();
+                return;
+            }
+
+            const stage = stageData[currentStage];
+
+            // Reset Card Position
+            wordCard.style.transition = 'none';
+            wordCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+            wordText.textContent = stage.word;
+
+            // Update Header & Progress
+            currentPosNum.textContent = currentStage + 1;
+            locationTitle.textContent = stage.location;
+            
+            // Update Map Nodes Visual
+            for (let i = 0; i < stageData.length; i++) {
+                const node = document.getElementById(`node-${i}`);
+                const iconBox = node.querySelector('.node-icon');
+                
+                if (i < currentStage) {
+                    iconBox.className = 'node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-500 text-slate-950 font-bold border-2 border-emerald-300 flex items-center justify-center text-sm md:text-base shadow-lg';
+                    iconBox.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else if (i === currentStage) {
+                    iconBox.className = 'node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-amber-500 text-slate-950 font-bold border-2 border-yellow-200 flex items-center justify-center text-sm md:text-base shadow-lg glow-gold pulse-effect';
+                    iconBox.innerHTML = `<i class="fa-solid ${stage.icon}"></i>`;
+                } else {
+                    iconBox.className = 'node-icon w-10 h-10 md:w-12 md:h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-sm md:text-base text-slate-500 shadow-md';
+                    iconBox.innerHTML = `<i class="fa-solid ${stageData[i].icon}"></i>`;
+                }
+            }
+
+            // Progress Line Bar
+            const percent = (currentStage / (stageData.length - 1)) * 100;
+            progressLine.style.width = `${percent}%`;
+        }
+
+        function evaluateAnswer(selectedType) {
+            const stage = stageData[currentStage];
+            const isCorrect = (selectedType === stage.type);
+
+            if (isCorrect) {
+                score += 20;
+                scoreDisplay.textContent = score;
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            userAnswers.push({
+                word: stage.word,
+                userChoice: selectedType,
+                correctType: stage.type,
+                correctForm: stage.correctForm,
+                isCorrect: isCorrect
+            });
+
+            showFeedback(isCorrect, stage);
+        }
+
+        function showFeedback(isCorrect, stage) {
+            const badge = document.getElementById('feedback-badge');
+            const icon = document.getElementById('feedback-icon');
+            const title = document.getElementById('feedback-title');
+            const subtitle = document.getElementById('feedback-subtitle');
+            const explanation = document.getElementById('feedback-explanation');
+
+            if (isCorrect) {
+                badge.className = 'w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl border-4 bg-emerald-500/20 text-emerald-400 border-emerald-500';
+                icon.className = 'fa-solid fa-circle-check';
+                title.className = 'text-2xl font-black text-emerald-400 mb-1';
+                title.textContent = 'Jawaban Tepat! (+20)';
+            } else {
+                badge.className = 'w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl shadow-xl border-4 bg-rose-500/20 text-rose-400 border-rose-500';
+                icon.className = 'fa-solid fa-circle-xmark';
+                title.className = 'text-2xl font-black text-rose-400 mb-1';
+                title.textContent = 'Kurang Tepat!';
+            }
+
+            subtitle.textContent = `"${stage.word}" adalah Kata ${stage.type === 'baku' ? 'Baku' : 'Tidak Baku'}`;
+            explanation.textContent = stage.explanation;
+
+            feedbackModal.classList.remove('hidden');
+        }
+
+        function nextStage() {
+            feedbackModal.classList.add('hidden');
+            currentStage++;
+            loadCurrentStage();
+        }
+
+        function showVictoryScreen() {
+            document.getElementById('final-score').textContent = score;
+            
+            // Rank evaluation based on score
+            const rankEl = document.getElementById('final-rank');
+            if (score === 100) {
+                rankEl.textContent = "Pakar Bahasa Utama";
+                rankEl.className = "text-base font-extrabold text-amber-400";
+            } else if (score >= 60) {
+                rankEl.textContent = "Penjelajah Terampil";
+                rankEl.className = "text-base font-extrabold text-emerald-400";
+            } else {
+                rankEl.textContent = "Pembelajar Pemula";
+                rankEl.className = "text-base font-extrabold text-sky-400";
+            }
+
+            // Populate Review Table
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+
+            userAnswers.forEach((ans, idx) => {
+                const item = document.createElement('div');
+                item.className = `p-3 rounded-xl border flex items-center justify-between text-xs ${ans.isCorrect ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-rose-950/30 border-rose-500/30'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid ${ans.isCorrect ? 'fa-check text-emerald-400' : 'fa-xmark text-rose-400'}"></i>
+                        <div>
+                            <span class="font-bold text-slate-200">${ans.word}</span>
+                            <span class="text-slate-400 block text-[10px]">Bentuk Baku: <strong class="text-amber-300">${ans.correctForm}</strong></span>
+                        </div>
+                    </div>
+                    <span class="px-2 py-1 rounded font-bold uppercase ${ans.correctType === 'baku' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'} text-[10px]">
+                        ${ans.correctType}
+                    </span>
+                `;
+                reviewList.appendChild(item);
+            });
+
+            triggerConfetti();
+            victoryModal.classList.remove('hidden');
+        }
+
+        function restartGame() {
+            currentStage = 0;
+            score = 0;
+            userAnswers = [];
+            scoreDisplay.textContent = '0';
+            victoryModal.classList.add('hidden');
+            loadCurrentStage();
+        }
+
+        // Particle Confetti Effect
+        function triggerConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particles = [];
+            const colors = ['#f59e0b', '#10b981', '#3b82f6', '#ec4899', '#8b5cf6'];
+
+            for (let i = 0; i < 80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speedY: Math.random() * 3 + 2,
+                    speedX: Math.random() * 2 - 1,
+                    rotation: Math.random() * 360
+                });
+            }
+
+            let animationFrame;
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.y += p.speedY;
+                    p.x += p.speedX;
+                    p.rotation += 2;
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate((p.rotation * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+                });
+
+                if (particles.some(p => p.y < canvas.height)) {
+                    animationFrame = requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            render();
+        }
+
+        // Window Load Event Listener
+        window.onload = function() {
+            initPointerEvents();
+            loadCurrentStage();
+        };
+    </script>
+</body>
+</html>
